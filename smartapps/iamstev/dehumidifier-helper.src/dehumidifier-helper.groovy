@@ -17,7 +17,7 @@ definition(
     name: "Dehumidifier Helper",
     namespace: "iamstev",
     author: "Steven Smith",
-    description: "Run fans to help cirulate air when a dehumidifer is running.",
+    description: "Run fans to help cirulate air when a dehumidifer is running. Also runs the fans for 15 minutes every 3 hours.",
     category: "Convenience",
     iconUrl: "https://s3.amazonaws.com/a.stev.link/smartthings/wind.png",
     iconX2Url: "https://s3.amazonaws.com/a.stev.link/smartthings/wind@2x.png",
@@ -57,32 +57,37 @@ def updated() {
 
 def initialize() {
     subscribe(dehumid, "power", meter_handler)
+    state.interval_fan = false
 	runEvery3Hours(do_fans_on)
 }
 
 def do_fans_on(){
-	def meterValue = dehumid.power as double
- 	def thresholdValue = threshold as int
-    if(meterValue > thresholdValue){
-    	log.debug "Interval fan instance skipped becuase dehumidifier is running."
-	}else{
-    	fans.on()
-    	runIn(900, do_fans_off)
-  	}	
+	log.debug "Interval fan turned on."
+    fans.on()
+    state.interval_fan = false
+    runIn(900, do_fans_off)
 }
 
 def do_fans_off(){
+	log.debug "Interval fan turned off."
 	fans.off()
+    state.interval_fan = false
 }
 
 
 
 def meter_handler(evt) {
-	def meterValue = evt.value as double
-	def thresholdValue = threshold as int
-	if(meterValue > thresholdValue){
-		fans.on()
-	}else{
-		fans.off()
+	if(state.interval_fan){
+    	log.debug "Dehumidifier fan event skipped becuase interval fan already running."
+    }else{
+        def meterValue = evt.value as double
+        def thresholdValue = threshold as int
+        if(meterValue > thresholdValue){
+        	log.debug "Dehumidifier fan turned on."
+            fans.on()
+        }else{
+        	log.debug "Dehumidifier fan turned off."
+            fans.off()
+        }
 	}
 }
