@@ -110,7 +110,7 @@ def do_start_show(){
     }else{
     	do_food_over
     }
-    runIn(showlength*60 + 180, do_show_over)
+    runIn(showlength*60 + 30, do_show_over)
 }
 
 def do_food_over(){
